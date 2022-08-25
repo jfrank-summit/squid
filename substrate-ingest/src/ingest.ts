@@ -28,6 +28,7 @@ import {
     withErrorContext
 } from "./util"
 
+const BLOCK_DELAY = parseInt(process.env.BLOCK_DELAY ?? '0')
 
 export interface IngestOptions {
     client: Client
@@ -274,10 +275,10 @@ export class Ingest {
     }
 
     private async getChainHeight(): Promise<number> {
-        let hash = await this.client.call('chain_getFinalizedHead')
+        let hash = await this.client.call('chain_getBlockHash')
         return this.client.call<sub.BlockHeader>('chain_getHeader', [hash])
             .then(header => {
-                let height = parseInt(header.number)
+                let height = Math.max(0, parseInt(header.number)-BLOCK_DELAY)
                 assert(Number.isSafeInteger(height))
                 return height
             }).catch(withErrorContext({
